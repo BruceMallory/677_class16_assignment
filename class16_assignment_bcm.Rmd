@@ -1,5 +1,5 @@
 ---
-title: "class16_assignment_bcm"
+title: "class16_assignment"
 author: "Bruce Mallory"
 date: "3/3/2021"
 output: pdf_document
@@ -7,8 +7,13 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-install.packages("Rlab")
+#install.packages("Rlab")
+#install.packages("latex2exp")
 library(Rlab)
+library(readxl)
+library(ggplot2)
+library(gridExtra)
+library(latex2exp)
 ```
 
 ## problem #1
@@ -23,12 +28,14 @@ n <- 60
 #z_star is 250 ft/hour or 250*12 / 60 in/min
 z_star <- (250*12/60)
 prob <- pnorm(z_star, mu, sd/sqrt(n), lower.tail=FALSE)
-cat("The probability of 250 ft or more of rope in an hour is", round(100*prob, 3),"%.")
+cat("The probability of producing 250 ft or more of rope in an hour is", 
+    round(100*prob, 3),"%.")
 ```
+\newpage
 ## problem #2
 Assume that the distribution of the number of defects on any given bolt of cloth is the Poisson distribution with mean 5, and the number of defects on each bolt is counted for a random sample of 125 bolts. Determine the probability that the average number of defects per bolt in the sample will be less than 5.5 defects per bolt.
 
-```{r}
+```{r comment=NA}
 #lamda = 5 defects/bolt
 lam <- 5
 #z_star = 5.5 defects/bolt
@@ -37,18 +44,23 @@ z_star <- 5.5
 sd <- sqrt(lam)
 n <- 125
 
-# Normal approximation to Poisson:
-# The random variable that follows Poisson distribution can be approximated to the normal distribution when the lambda is large. The thumb rule for this is that the lambda must be greater than approximately 5 and the sample size must be greater than 100.
+
 
 prob.pois <- ppois(z_star, lambda = lam, lower.tail = TRUE)
-#Why isn't the poisson calculation being approximated by the normal???  I know the normal is correct (saw it on the web)
-prob.norm <- pnorm(z_star, lam, sd/sqrt(n), lower.tail=TRUE)
-cat("The probability that there will be less than 5.5 defects per bolt is", round(100*prob.norm, 1),"%.")
-```
+#Why isn't the poisson calculation the same as the normal approximation???
+cat("Using ppois(), I get", prob.pois, "\n")
 
+#I know the normal is correct (saw it on the web)
+prob.norm <- pnorm(z_star, lam, sd/sqrt(n), lower.tail=TRUE)
+cat("The probability that there will be less than 5.5 defects per bolt is", 
+    round(100*prob.norm, 1),"%.")
+```
+I've used Normal approximation to Poisson because "the random variable that follows Poisson distribution can be approximated to the normal distribution when the lambda is large. The thumb rule for this is that the lambda must be greater than approximately 5 and the sample size must be greater than 100."  
+
+\newpage
 ## problem #3
 Suppose that the proportion of defective items in a large manufactured lot is 0.1. What is the smallest random sample of items that must be taken from the lot in order for the probability to be at least 0.99 that the proportion of defective items in the sample will be less than 0.13?
-```{r}
+```{r comment=NA}
 p <- 0.1
 prob <- 0.99
 z_star <- 0.13
@@ -59,7 +71,7 @@ for (n in 1:1000){
     break
   } 
 }
-n
+cat("The smallest sample size is", n)
 
 #using the normal approximation
 for (m in 1:1000){
@@ -67,20 +79,20 @@ for (m in 1:1000){
     break
   } 
 }
-m
+cat("The smallest sample size is", m)
 
 ```
 
+\newpage
 ## problem #4
 Suppose that 16 digits are chosen at random with replacement from the set 0, . . . , 9. What is the probability that their average will lie between 4 and 6?
-```{r}
-#E[X] = .1(0 + 1 + 2 + ... + 9) = .1*(90/2) = 4.5 = mu
+```{r comment=NA}
+
 E_X <- 0
 for (i in 0:9){
   E_X <- E_X + .1*i
 }
 
-#E[x^2] = .2(0^2 + 1^2 + 2^2 + ... + 9^2) = .1 * (1^2 + 2^2 + ... + 9^2) = .1*(9)(9+1)(9+1/2)/3 = 28.5 = sigma^2 - mu^2
 E_X2 <- 0
 for (i in 0:9){
   E_X2 <- E_X2 + .1*i^2
@@ -92,17 +104,130 @@ n <- 16
 
 prob <- pnorm(6, E_X, sqrt(var/16)) - pnorm(4, E_X, sqrt(var/16))
 
-cat("The probability that the average of the 16 digits will be between 4 and 6 is", round(100*prob, 1),"%.")
+cat("The probability that the average of the 16 digits will be between 4 and 6 is",
+    round(100*prob, 1),"%.")
 ```
 I've use the first and second moments to generate $\mu$ and $\sigma$. Then used normal probability calculations.  
-$E[X] =(\frac{1}{10})(0+1+2+...+9) = (\frac{1}{10})(\frac{90}{2}) = 4.5 = \mu$
-$E[X^2] = (\frac{1}{10})(0^2+1^2+2^2+...+9^2)=(\frac{1}{10})(1^2+2^2+...+9^2)=(\frac{1}{10})(\frac{(9)(9+1)(9+\frac{1}{2})}{3} = 28.5 = \sigma^2+\mu^2$
-So $\sigma=E[X^2]-\mu^2$ = $\sqrt{28.5 - 4.5^2}$
+  
+$E[X] =(\frac{1}{10})(0+1+2+...+9) = (\frac{1}{10})(\frac{90}{2}) = 4.5 = \mu$  
+  
+$E[X^2] = (\frac{1}{10})(0^2+1^2+2^2+...+9^2)=(\frac{1}{10})(1^2+2^2+...+9^2)=(\frac{1}{10})(\frac{(9)(9+1)(9+\frac{1}{2})}{3} = 28.5 = \sigma^2+\mu^2$  
+  
+So $\sigma^2=E[X^2]-\mu^2$ = $\sqrt{28.5 - 4.5^2}$  
 
+\newpage
 ## problem #5
 Select a skewed distribution from which to sample. Using R, demonstrate the convergence of the mean value of your samples to the Normal distribution. Assume you are making this demonstration to someone who has little or no statistical training. Your demonstration should take no more than 10 minutes. Along with your code, outline the commentary you would use in your demonstration.
 ```{r}
+pennydata <- read_excel("pennydata.xls")
+ages <- rep(pennydata$Age, pennydata$number)
+pop <- as.data.frame(ages)
 
+mu <- round(mean(pop$ages),2)
+SD <- round(sd(pop$ages), 2)
+
+gg_pop <- ggplot(data=pop, aes(ages, y=..count../sum(..count..))) +
+  geom_histogram(color="white", fill="black", binwidth=1) +
+  geom_vline(xintercept=mu, linetype="dashed", color="blue", size=.5) +
+  geom_text(
+    aes(x=30, label=paste("mu =",mu), y=.24),
+    color = "blue") +
+   geom_text(
+    aes(x=30, label=paste("SD =",SD), y=.20),
+    color = "blue") +
+  labs(title="Penny popultion (N=752)", x="Ages", y="Proportion") +
+  coord_cartesian(ylim=c(0, .30), xlim=c(0,50)) +
+  theme(axis.line.y=element_line(color="black", size=.5),
+        panel.background = element_blank(), 
+        panel.grid.major.x = element_line(color="grey", size=0.1),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_line(color="grey", size=0.1),
+        panel.grid.minor.y = element_blank(),
+        plot.title=element_text(color="blue")) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+
+samples <- data.frame(
+  "size_4" = rep(0, 750),
+  "size_16" = rep(0, 750),
+  "size_64" = rep(0, 750)
+  )
+
+for (i in 1:750){
+  samples$size_4[i] <- mean(sample(pop$ages, 4, replace=TRUE))
+  samples$size_16[i] <- mean(sample(pop$ages, 16, replace=TRUE))
+  samples$size_64[i] <- mean(sample(pop$ages, 64, replace=TRUE))
+}
+
+x_bar4 <- round(mean(samples$size_4),2)
+se4 <- round(sd(samples$size_4), 2)
+gg_samples_4 <- ggplot(data=samples, aes(size_4, y=..count../sum(..count..))) +
+ geom_histogram(color="white", fill="grey", binwidth=1) +
+  geom_vline(xintercept=mu, linetype="dashed", color="darkred", size=.5) +
+   geom_text(
+    aes(x=29, label=paste("x-bar =",x_bar4), y=.24),
+    color = "darkred") +
+   geom_text(
+    aes(x=30, label=paste("se =",se4), y=.20),
+    color = "darkred") +
+  labs(title="750 samples of size n=4", x="Ages", y="Proportion") +
+  coord_cartesian(ylim=c(0, .30), xlim=c(0,50)) +
+  theme(axis.line.y=element_line(color="black", size=.5),
+        panel.background = element_blank(), 
+        panel.grid.major.x = element_line(color="grey", size=0.1),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_line(color="grey", size=0.1),
+        panel.grid.minor.y = element_blank(),
+        plot.title=element_text(color="darkred")) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+
+
+x_bar16 <- round(mean(samples$size_16),2)
+se16 <- round(sd(samples$size_16), 2)
+gg_samples_16 <- ggplot(data=samples, aes(size_16, y=..count../sum(..count..))) +
+ geom_histogram(color="white", fill="grey", binwidth=1) +
+  geom_vline(xintercept=mu, linetype="dashed", color="darkred", size=.5) +
+   geom_text(
+    aes(x=29, label=paste("x-bar =",x_bar16), y=.24),
+    color = "darkred") +
+   geom_text(
+    aes(x=30, label=paste("se =",se16), y=.20),
+    color = "darkred") +
+  labs(title="750 samples of size n=16", x="Ages", y="Proportion") +
+  coord_cartesian(ylim=c(0, .30), xlim=c(0,50)) +
+  theme(axis.line.y=element_line(color="black", size=.5),
+        panel.background = element_blank(), 
+        panel.grid.major.x = element_line(color="grey", size=0.1),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_line(color="grey", size=0.1),
+        panel.grid.minor.y = element_blank(),
+        plot.title=element_text(color="darkred")) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+
+x_bar64 <- round(mean(samples$size_64),2)
+se64 <- round(sd(samples$size_64), 2)
+gg_samples_64 <- ggplot(data=samples, aes(size_64, y=..count../sum(..count..))) +
+ geom_histogram(color="white", fill="grey", binwidth=1) +
+  geom_vline(xintercept=mu, linetype="dashed", color="darkred", size=.5) +
+   geom_text(
+    aes(x=29, label=paste("x-bar =",x_bar64), y=.24),
+    color = "darkred") +
+   geom_text(
+    aes(x=30, label=paste("se =",se64), y=.20),
+    color = "darkred") +
+  labs(title="750 samples of size n=64", x="Ages", y="Proportion") +
+  coord_cartesian(ylim=c(0, .30), xlim=c(0,50)) +
+  theme(axis.line.y=element_line(color="black", size=.5),
+        panel.background = element_blank(), 
+        panel.grid.major.x = element_line(color="grey", size=0.1),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_line(color="grey", size=0.1),
+        panel.grid.minor.y = element_blank(),
+        plot.title=element_text(color="darkred")) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+
+grid.arrange(gg_pop, gg_samples_4, gg_samples_16, gg_samples_64, ncol=2)
 ```
-
+    
+      
+The sampling distribution is approximately: $N(\mu, \frac{\sigma}{\sqrt{n}})$
 
